@@ -69,7 +69,6 @@ Rivalcards = []
 def shuffle(AllCards):
     Mycards.clear()
     Rivalcards.clear()
-    kill = AllCards[len(AllCards) - 1].type
     for num in range(6):
         if (num % 2 == 0):
             Mycards.append(AllCards[num])
@@ -81,24 +80,34 @@ def shuffle(AllCards):
 
 def game(AllCards):
     random.shuffle(AllCards)
+    killer = AllCards[len(AllCards) - 1].type
     turn = 0
     AllCards = shuffle(AllCards)
     Player_Points = 0
     Enemy_Points = 0
+    Won_lastRound = random.randint(0,1) #(At start the turn is random, then If 0 you won last round, If 1 Rival won)
 
     while True:
 
 
         if (len(Mycards) == 0 and len(Rivalcards) == 0):
-            print(f"\n Your points: {Player_Points} \n Enemy points: {Enemy_Points}")
+            print(f"\n Your points: {Player_Points} \n Rival points: {Enemy_Points}")
             break
 
         else:
+            #Vuelve a repartir cartas (no esta codificado completamente)
             if (turn > 0 and len(AllCards) != 0):
-                Mycards.append(AllCards[0])
-                Rivalcards.append(AllCards[1])
-                AllCards = AllCards[2:]
+                if (Won_lastRound == 0):
+                    Mycards.append(AllCards[0])
+                    Rivalcards.append(AllCards[1])
+                    AllCards = AllCards[2:]
+                else:
+                    Rivalcards.append(AllCards[1])
+                    Mycards.append(AllCards[0])
+                    AllCards = AllCards[2:]
 
+            print(f"Turn: {turn}")
+            print(f"Killer is {AllCards[len(AllCards) - 1].type}")
             print("YOUR CARDS") #TEST
             for num in range(len(Mycards)):
                 print(f"{num + 1}. {Mycards[num]}")
@@ -107,19 +116,77 @@ def game(AllCards):
             for num in range(len(Rivalcards)):
                 print(f"{num + 1}. {Rivalcards[num]}")
 
+            #Logica de ronda
+            if (Won_lastRound == 0): 
+                user = input("Choose your card: ")
+                while (user not in ["1", "2", "3"]) or (int(user) < 1 or int(user) > len(Mycards)):
+                    user = input("Invalid number, try again: ")
 
-            user = int(input("Choose your card: "))
-            while user < 1 or user > len(Mycards):
-                user = int(input("Invalid number, try again: "))
+                rival = random.randint(0, len(Rivalcards) - 1)
+                print(f"Rival use: {Rivalcards[rival - 1]}")
 
-            rival = random.randint(0, len(Rivalcards) - 1)
+            if (Won_lastRound == 1):
+                rival = random.randint(0, len(Rivalcards) - 1)
+                print(f"Rival use: {Rivalcards[rival - 1]}")
+                user = input("Choose your card: ")
+                while (user not in ["1", "2", "3"]) or (int(user) < 1 or int(user) > len(Mycards)):
+                    user = input("Invalid number, try again: ")
+            
+            user = int(user)
+        
+            if (Mycards[user - 1].value > Rivalcards[rival - 1].value):
+                if (Mycards[user - 1].type == killer): #Tu carta es mate
+                    print("YOU WIN!")
+                    Won_lastRound = 0
+                    Player_Points += Mycards[user - 1].value + Rivalcards[rival - 1].value
 
-            if (Mycards[user - 1].value >= Rivalcards[rival - 1].value):
-                print("YOU WIN!")
-                Player_Points += Mycards[user - 1].value + Rivalcards[rival - 1].value
-            else:
-                print("YOU LOSE!")
-                Enemy_Points += Mycards[user - 1].value + Rivalcards[rival - 1].value
+                elif (Rivalcards[rival - 1].type == killer): #La carta del rival es mate
+                    print("YOU LOSE!")
+                    Won_lastRound = 1
+                    Enemy_Points += Mycards[user - 1].value + Rivalcards[rival - 1].value 
+
+                elif (Won_lastRound == 0): #Tu fuiste primero 
+                    print("YOU WIN!")
+                    Won_lastRound = 0
+                    Player_Points += Mycards[user - 1].value + Rivalcards[rival - 1].value
+
+                elif(Won_lastRound == 1 and Mycards[user - 1].type == Rivalcards[rival - 1].type):
+                    print("YOU WIN!") #Tu fuiste ultimo
+                    Won_lastRound = 0
+                    Player_Points += Mycards[user - 1].value + Rivalcards[rival - 1].value
+
+            if (Mycards[user - 1].value < Rivalcards[rival - 1].value):
+
+                if (Rivalcards[rival - 1].type == killer): #La carta del rival es mate
+                    print("YOU LOSE!")
+                    Won_lastRound = 1
+                    Enemy_Points += Mycards[user - 1].value + Rivalcards[rival - 1].value
+
+                elif (Mycards[user - 1].type == killer): #Tu carta es mate
+                    print("YOU WIN!")
+                    Won_lastRound = 0
+                    Player_Points += Mycards[user - 1].value + Rivalcards[rival - 1].value 
+
+                elif (Won_lastRound == 1): #Rival fue primero 
+                    print("YOU LOSE!")
+                    Won_lastRound = 1
+                    Enemy_Points += Mycards[user - 1].value + Rivalcards[rival - 1].value
+
+                elif(Won_lastRound == 1 and Mycards[user - 1].type == Rivalcards[rival - 1].type): #Rival fue ultimo
+                    print("YOU LOSE!") 
+                    Won_lastRound = 1
+                    Enemy_Points += Mycards[user - 1].value + Rivalcards[rival - 1].value
+            
+            if (Mycards[user - 1].value == Rivalcards[rival - 1].value):
+                if ((Mycards[user - 1].type == killer) or (Won_lastRound == 0 and Rivalcards[rival - 1].type != killer)):
+                    print("YOU WIN!")
+                    Won_lastRound = 0
+                    Player_Points += Mycards[user - 1].value + Rivalcards[rival - 1].value
+                else:
+                    print("YOU LOSE!")
+                    Won_lastRound = 1
+                    Enemy_Points += Mycards[user - 1].value + Rivalcards[rival - 1].value
+
 
         #print(f"\n Your points: {Player_Points} \n Enemy points: {Enemy_Points}")
         Mycards.pop(user - 1)
